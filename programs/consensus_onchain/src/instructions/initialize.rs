@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::states::consensus::*;
+use anchor_lang::prelude::*;
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(
@@ -15,8 +15,9 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn initialize(ctx: Context<Initialize>, fee:u64) -> Result<()> {
+pub fn initialize(ctx: Context<Initialize>, admin_account: Pubkey, fee: u64) -> Result<()> {
     let config_state = &mut ctx.accounts.config;
+    config_state.admin_account = admin_account;
     config_state.fee = fee;
     Ok(())
 }
