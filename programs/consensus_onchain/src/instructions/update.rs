@@ -2,28 +2,29 @@ use crate::errors::error::ErrorCode;
 use crate::states::consensus::*;
 use anchor_lang::prelude::*;
 #[derive(Accounts)]
-pub struct Initialize<'info> {
+pub struct Update<'info> {
     #[account(
-    init,
+    mut,
     seeds = [b"config".as_ref()],
     bump,
-    payer = payer,
-    space = 8 + Config::INIT_SPACE
     )]
     pub config: Box<Account<'info, Config>>,
-    #[account(mut)]
+    #[account(mut,
+    constraint = config.owner == payer.key()
+    )]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
-pub fn initialize(ctx: Context<Initialize>, signer: Pubkey, fee: u64) -> Result<()> {
+pub fn update(ctx: Context<Update>, signer: Pubkey, fee: u64) -> Result<()> {
     let config_state = &mut ctx.accounts.config;
-    if config_state.initialized {
-        return Err(ErrorCode::Initialized.into());
+    if !config_state.initialized {
+        return Err(ErrorCode::NotInitialized.into());
     }
-    config_state.owner = *ctx.accounts.payer.key;
+    // if config_state.owner != *ctx.accounts.payer.key{
+    //     return Err(ErrorCode::AccountError.into());
+    // }
     config_state.signer = signer;
     config_state.fee = fee;
-    config_state.initialized = true;
     Ok(())
 }
