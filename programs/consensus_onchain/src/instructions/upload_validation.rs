@@ -4,6 +4,7 @@ use crate::utils;
 use anchor_lang::prelude::*;
 use serde::{Deserialize, Serialize};
 use solana_program::instruction::Instruction;
+use solana_program::system_instruction;
 use solana_program::sysvar::instructions::{load_instruction_at_checked, ID as IX_ID};
 
 #[derive(Serialize, Deserialize)]
@@ -93,5 +94,21 @@ pub fn upload_validation(
 
     consensus_state.consensus_proof = array_bytes;
 
+    let upload_fee = config_state.fee;
+    // Charge an upload fee, if one exists
+    if upload_fee > 0 {
+        let transfer_instruction = system_instruction::transfer(
+            &ctx.accounts.user.key(),
+            &ctx.accounts.config.key(),
+            upload_fee,
+        );
+        solana_program::program::invoke(
+            &transfer_instruction,
+            &[
+                ctx.accounts.user.to_account_info(),
+                ctx.accounts.config.to_account_info(),
+            ],
+        )?;
+    }
     Ok(())
 }

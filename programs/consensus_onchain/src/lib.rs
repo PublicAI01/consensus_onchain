@@ -6,6 +6,7 @@ mod utils;
 use instructions::initialize::*;
 use instructions::update::*;
 use instructions::upload_validation::*;
+use instructions::withdraw::*;
 
 declare_id!("2pc2q2DVkXNycXq4DAJqGRtosMmffq5KKHB7iXUoB3wH");
 
@@ -27,5 +28,9 @@ pub mod consensus_onchain {
 
     pub fn update(ctx: Context<Update>, signer: Pubkey, fee: u64) -> Result<()> {
         instructions::update::update(ctx, signer, fee)
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
+        instructions::withdraw::withdraw(ctx)
     }
 }
