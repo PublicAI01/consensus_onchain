@@ -9,17 +9,15 @@ crate-type = ["cdylib", "lib"]
 name = "consensus_onchain"
 
 [features]
-default = []
-cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+cpi = ["no-entrypoint"]
+default = []
 
 [dependencies]
-anchor-lang = "0.30.0"
-anchor-spl = "0.30.0"
-solana-program = "1.18.14"
+anchor-lang = "0.28.0"
+solana-program = "1.16.25"
 serde_json = "1.0"
 serde = "1.0.202"
 hex = "0.4.3"

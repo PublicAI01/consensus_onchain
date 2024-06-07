@@ -8,7 +8,7 @@ use instructions::update::*;
 use instructions::upload_validation::*;
 use instructions::withdraw::*;
 
-declare_id!("2pc2q2DVkXNycXq4DAJqGRtosMmffq5KKHB7iXUoB3wH");
+declare_id!("B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn");
 
 #[program]
 pub mod consensus_onchain {

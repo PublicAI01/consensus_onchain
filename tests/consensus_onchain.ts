@@ -5,6 +5,7 @@ import { BN } from 'bn.js';
 import {Keypair, PublicKey} from "@solana/web3.js";
 import {assert} from "chai";
 import * as ed from '@noble/ed25519';
+import * as bs58 from "bs58";
 
 describe("consensus_onchain", () => {
   // Configure the client to use the local cluster.
@@ -13,18 +14,18 @@ describe("consensus_onchain", () => {
   const program = anchor.workspace.ConsensusOnchain as Program<ConsensusOnchain>;
 
   const pg = program.provider as anchor.AnchorProvider;
-    const requestAirdrop = async (mint_keypair:anchor.web3.Keypair) => {
-        const signature = await pg.connection.requestAirdrop(
-            mint_keypair.publicKey,
-            5 * anchor.web3.LAMPORTS_PER_SOL
-        );
-        const { blockhash, lastValidBlockHeight } = await pg.connection.getLatestBlockhash();
-        await pg.connection.confirmTransaction({
-            blockhash,
-            lastValidBlockHeight,
-            signature
-        });
-    }
+  const requestAirdrop = async (mint_keypair:anchor.web3.Keypair) => {
+    const signature = await pg.connection.requestAirdrop(
+        mint_keypair.publicKey,
+        5 * anchor.web3.LAMPORTS_PER_SOL
+    );
+    const { blockhash, lastValidBlockHeight } = await pg.connection.getLatestBlockhash();
+    await pg.connection.confirmTransaction({
+      blockhash,
+      lastValidBlockHeight,
+      signature
+    });
+  }
   const admin_keypair = Keypair.generate();
   const user_keypair =  Keypair.generate();
   const [configPDA] = PublicKey.findProgramAddressSync(
@@ -36,11 +37,11 @@ describe("consensus_onchain", () => {
 
 
   it("Is initialized!", async () => {
-      await requestAirdrop(user_keypair);
-      await requestAirdrop(admin_keypair);
+    await requestAirdrop(user_keypair);
+    await requestAirdrop(admin_keypair);
 
-      let fee = new BN('20')
-      const tx = await program.methods.initialize(admin_keypair.publicKey, fee).accounts({
+    let fee = new BN('30000')
+    const tx = await program.methods.initialize(admin_keypair.publicKey, fee).accounts({
       config: configPDA,
       payer: pg.wallet.publicKey,
       systemProgram: anchor.web3.SystemProgram.programId,
@@ -107,7 +108,7 @@ describe("consensus_onchain", () => {
       );
     }
     assert((await program.account.config.fetch(configPDA)).fee.eq(
-        new BN('20'))
+        new BN('30000'))
     )
     assert.isFalse((await program.account.consensusState.fetch(userPDA)).global
     )
@@ -384,4 +385,4 @@ describe("consensus_onchain", () => {
         assert(newBalance==0)
     });
 
-    });
+});

@@ -1,12 +1,12 @@
-[toolchain]
-
 [features]
-resolution = true
+seeds = false
 skip-lint = false
-
 [programs.localnet]
-consensus_onchain = "2pc2q2DVkXNycXq4DAJqGRtosMmffq5KKHB7iXUoB3wH"
-
+consensus_onchain = "B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn"
+[programs.devnet]
+consensus_onchain = "B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn"
+[programs.mainnet]
+consensus_onchain = "B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn"
 [registry]
 url = "https://api.apr.dev"
 

@@ -5,7 +5,9 @@ use anchor_lang::prelude::*;
 use serde::{Deserialize, Serialize};
 use solana_program::instruction::Instruction;
 use solana_program::system_instruction;
-use solana_program::sysvar::instructions::{load_instruction_at_checked, ID as IX_ID};
+use solana_program::sysvar::instructions::{
+    load_current_index_checked, load_instruction_at_checked, ID as IX_ID,
+};
 
 #[derive(Serialize, Deserialize)]
 struct Validation {
@@ -66,7 +68,8 @@ pub fn upload_validation(
     };
 
     // Get what should be the Ed25519Program instruction
-    let ix: Instruction = load_instruction_at_checked(0, &ctx.accounts.ix_sysvar)?;
+    let index = load_current_index_checked(&ctx.accounts.ix_sysvar)?;
+    let ix: Instruction = load_instruction_at_checked((index - 1).into(), &ctx.accounts.ix_sysvar)?;
 
     // Check that ix is what we expect to have been sent
     utils::verify_ed25519_ix(&ix, &signer_key, &msg, &sig)?;
