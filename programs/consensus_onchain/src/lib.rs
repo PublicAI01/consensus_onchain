@@ -7,6 +7,7 @@ use instructions::initialize::*;
 use instructions::update::*;
 use instructions::upload_validation::*;
 use instructions::withdraw::*;
+use instructions::upload_badge::*;
 
 declare_id!("B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn");
 
@@ -30,7 +31,16 @@ pub mod consensus_onchain {
         instructions::update::update(ctx, signer, fee)
     }
 
-    pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
-        instructions::withdraw::withdraw(ctx)
+    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+        instructions::withdraw::withdraw(ctx, amount)
+    }
+
+    pub fn upload_badge(
+        ctx: Context<UploadBadge>,
+        quiz: u64,
+        msg: Vec<u8>,
+        sig: [u8; 64],
+    ) -> Result<()> {
+        instructions::upload_badge::upload_badge(ctx, quiz, msg, sig)
     }
 }

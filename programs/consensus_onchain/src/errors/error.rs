@@ -19,4 +19,8 @@ pub enum ErrorCode {
     SigVerificationFailed,
     #[msg("Wrong account.")]
     AccountError,
+    #[msg("Invalid quiz id.")]
+    InvalidQuizIDError,
+    #[msg("Invalid owner.")]
+    InvalidOwnerError,
 }

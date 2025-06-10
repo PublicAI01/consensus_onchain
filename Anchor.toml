@@ -1,5 +1,5 @@
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 [programs.localnet]
 consensus_onchain = "B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn"
@@ -11,7 +11,7 @@ consensus_onchain = "B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

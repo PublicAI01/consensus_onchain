@@ -17,16 +17,20 @@ pub struct Withdraw<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
+pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     let config_state = &mut ctx.accounts.config;
     if !config_state.initialized {
         return Err(ErrorCode::NotInitialized.into());
     }
-    let balance = **ctx
+    let mut balance = **ctx
         .accounts
         .config
         .to_account_info()
         .try_borrow_lamports()?;
+    if amount != 0 {
+       balance = amount;
+    }
+
     // ctx.accounts.config.sub_lamports(balance)?;
     // ctx.accounts.payer.add_lamports(balance)?;
     **ctx

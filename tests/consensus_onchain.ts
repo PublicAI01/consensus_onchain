@@ -27,7 +27,7 @@ describe("consensus_onchain", () => {
     });
   }
   const admin_keypair = Keypair.generate();
-  const user_keypair =  Keypair.generate();
+  let user_keypair =  Keypair.generate();
   const [configPDA] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("config")
@@ -374,15 +374,233 @@ describe("consensus_onchain", () => {
         );
         assert((newBalance-oldBalance)==2000000)
 
-        await program.methods.withdraw().accounts({
+        await program.methods.withdraw(new BN(1000000)).accounts({
             config: configPDA,
             payer: pg.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
         }).signers([]).rpc();
-       newBalance = await pg.connection.getBalance(
+       let otherNewBalance = await pg.connection.getBalance(
             configPDA
         );
-        assert(newBalance==0)
+        assert((newBalance-otherNewBalance)==1000000)
     });
 
+    it("User upload badge data", async () => {
+        const [badgeConfigPoolPDA] = PublicKey.findProgramAddressSync(
+            [Buffer.from('bdt_cfg_pool')],
+            program.programId,
+        );
+        let quiz = 9;
+        let tier = 1;
+        let msgJson = {
+            'quiz':quiz,
+            'tier':tier,
+            'owner': Array.from(user_keypair.publicKey.toBytes()),
+        }
+        let message = Uint8Array.from(
+            Buffer.from(JSON.stringify(msgJson))
+        );
+        let signature = await ed.sign(message, pg.wallet.payer.secretKey.slice(0, 32));
+        let [badgeConfigPDA] = PublicKey.findProgramAddressSync(
+            [Buffer.from('bdt_cfg'), Buffer.from(quiz.toString())],
+            program.programId,
+        );
+        let [badgePDA] = PublicKey.findProgramAddressSync(
+            [Buffer.from(quiz.toString()), user_keypair.publicKey.toBuffer()],
+            program.programId,
+        );
+
+        let uploadBadgeInstruction = await program.methods.uploadBadge(
+            new BN(quiz.toString()),
+            Buffer.from(message),
+            Array.from(signature),
+        ).accounts({
+            user:user_keypair.publicKey,
+            config: configPDA,
+            badgeConfigPool: badgeConfigPoolPDA,
+            badgeConfig: badgeConfigPDA,
+            badge:badgePDA,
+            ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        }).instruction()
+
+        let tx = new anchor.web3.Transaction()
+            .add(
+                // Ed25519 instruction
+                anchor.web3.Ed25519Program.createInstructionWithPublicKey({
+                    publicKey: pg.publicKey.toBytes(),
+                    message: message,
+                    signature: signature,
+                })
+            )
+            .add(
+                // Our instruction
+                uploadBadgeInstruction
+            );
+        try {
+            await anchor.web3.sendAndConfirmTransaction(
+                pg.connection,
+                tx,
+                [user_keypair]
+            );
+
+            // If all goes well, we're good!
+        } catch (error) {
+            assert.fail(
+                `Should not have failed with the following error:\n${error.msg}`
+            );
+        }
+        assert((await program.account.badgeConfigPool.fetch(badgeConfigPoolPDA)).total.eq(new BN(1)))
+        assert((await program.account.badgeConfigPool.fetch(badgeConfigPoolPDA)).configCount.eq(new BN(1)))
+        assert((await program.account.badgeConfig.fetch(badgeConfigPDA)).total.eq(new BN(1)))
+        assert((await program.account.badgeConfig.fetch(badgeConfigPDA)).quiz.eq(new BN(quiz)))
+        assert((await program.account.badge.fetch(badgePDA)).quiz.eq(new BN(quiz)))
+        assert((await program.account.badge.fetch(badgePDA)).tier.eq(new BN(tier)))
+        assert((await program.account.badge.fetch(badgePDA)).owner = user_keypair.publicKey)
+        // Should error
+        try {
+            await anchor.web3.sendAndConfirmTransaction(
+                pg.connection,
+                tx,
+                [user_keypair]
+            );
+
+        } catch (error) {
+            // pass
+        }
+        quiz = 2;
+        tier = 1;
+        msgJson = {
+            'quiz':quiz,
+            'tier':tier,
+            'owner': Array.from(user_keypair.publicKey.toBytes()),
+        }
+        message = Uint8Array.from(
+            Buffer.from(JSON.stringify(msgJson))
+        );
+        signature = await ed.sign(message, pg.wallet.payer.secretKey.slice(0, 32));
+        [badgeConfigPDA] = PublicKey.findProgramAddressSync(
+            [Buffer.from('bdt_cfg'), Buffer.from(quiz.toString())],
+            program.programId,
+        );
+        [badgePDA] = PublicKey.findProgramAddressSync(
+            [Buffer.from(quiz.toString()), user_keypair.publicKey.toBuffer()],
+            program.programId,
+        );
+
+        uploadBadgeInstruction = await program.methods.uploadBadge(
+            new BN(quiz.toString()),
+            Buffer.from(message),
+            Array.from(signature),
+        ).accounts({
+            user:user_keypair.publicKey,
+            config: configPDA,
+            badgeConfigPool: badgeConfigPoolPDA,
+            badgeConfig: badgeConfigPDA,
+            badge:badgePDA,
+            ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        }).instruction()
+
+        tx = new anchor.web3.Transaction()
+            .add(
+                // Ed25519 instruction
+                anchor.web3.Ed25519Program.createInstructionWithPublicKey({
+                    publicKey: pg.publicKey.toBytes(),
+                    message: message,
+                    signature: signature,
+                })
+            )
+            .add(
+                // Our instruction
+                uploadBadgeInstruction
+            );
+        try {
+            await anchor.web3.sendAndConfirmTransaction(
+                pg.connection,
+                tx,
+                [user_keypair]
+            );
+
+            // If all goes well, we're good!
+        } catch (error) {
+            assert.fail(
+                `Should not have failed with the following error:\n${error.msg}`
+            );
+        }
+        assert((await program.account.badgeConfigPool.fetch(badgeConfigPoolPDA)).total.eq(new BN(2)))
+        assert((await program.account.badgeConfigPool.fetch(badgeConfigPoolPDA)).configCount.eq(new BN(2)))
+        assert((await program.account.badgeConfig.fetch(badgeConfigPDA)).total.eq(new BN(1)))
+        assert((await program.account.badgeConfig.fetch(badgeConfigPDA)).quiz.eq(new BN(quiz)))
+        assert((await program.account.badge.fetch(badgePDA)).quiz.eq(new BN(quiz)))
+        assert((await program.account.badge.fetch(badgePDA)).tier.eq(new BN(tier)))
+        assert((await program.account.badge.fetch(badgePDA)).owner = user_keypair.publicKey)
+        const other_user_keypair = Keypair.generate();
+        await requestAirdrop(other_user_keypair);
+        msgJson = {
+            'quiz':quiz,
+            'tier':tier,
+            'owner': Array.from(other_user_keypair.publicKey.toBytes()),
+        }
+        message = Uint8Array.from(
+            Buffer.from(JSON.stringify(msgJson))
+        );
+        signature = await ed.sign(message, pg.wallet.payer.secretKey.slice(0, 32));
+        [badgeConfigPDA] = PublicKey.findProgramAddressSync(
+            [Buffer.from('bdt_cfg'), Buffer.from(quiz.toString())],
+            program.programId,
+        );
+        [badgePDA] = PublicKey.findProgramAddressSync(
+            [Buffer.from(quiz.toString()), other_user_keypair.publicKey.toBuffer()],
+            program.programId,
+        );
+
+        uploadBadgeInstruction = await program.methods.uploadBadge(
+            new BN(quiz.toString()),
+            Buffer.from(message),
+            Array.from(signature),
+        ).accounts({
+            user:other_user_keypair.publicKey,
+            config: configPDA,
+            badgeConfigPool: badgeConfigPoolPDA,
+            badgeConfig: badgeConfigPDA,
+            badge:badgePDA,
+            ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        }).instruction()
+
+        tx = new anchor.web3.Transaction()
+            .add(
+                // Ed25519 instruction
+                anchor.web3.Ed25519Program.createInstructionWithPublicKey({
+                    publicKey: pg.publicKey.toBytes(),
+                    message: message,
+                    signature: signature,
+                })
+            )
+            .add(
+                // Our instruction
+                uploadBadgeInstruction
+            );
+        try {
+            await anchor.web3.sendAndConfirmTransaction(
+                pg.connection,
+                tx,
+                [other_user_keypair]
+            );
+
+            // If all goes well, we're good!
+        } catch (error) {
+            assert.fail(
+                `Should not have failed with the following error:\n${error.msg}`
+            );
+        }
+        assert((await program.account.badgeConfigPool.fetch(badgeConfigPoolPDA)).total.eq(new BN(3)))
+        assert((await program.account.badgeConfigPool.fetch(badgeConfigPoolPDA)).configCount.eq(new BN(2)))
+        assert((await program.account.badgeConfig.fetch(badgeConfigPDA)).total.eq(new BN(2)))
+        assert((await program.account.badgeConfig.fetch(badgeConfigPDA)).quiz.eq(new BN(quiz)))
+        assert((await program.account.badge.fetch(badgePDA)).quiz.eq(new BN(quiz)))
+        assert((await program.account.badge.fetch(badgePDA)).tier.eq(new BN(tier)))
+        assert((await program.account.badge.fetch(badgePDA)).owner = other_user_keypair.publicKey)
+    });
 });
