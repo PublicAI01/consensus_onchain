@@ -8,6 +8,7 @@ use instructions::update::*;
 use instructions::upload_validation::*;
 use instructions::withdraw::*;
 use instructions::upload_badge::*;
+use instructions::claim::*;
 
 declare_id!("B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn");
 
@@ -42,5 +43,20 @@ pub mod consensus_onchain {
         sig: [u8; 64],
     ) -> Result<()> {
         instructions::upload_badge::upload_badge(ctx, quiz, msg, sig)
+    }
+
+    pub fn ini_claim(
+        ctx: Context<IniClaim>,
+    ) -> Result<()> {
+        instructions::claim::ini_claim(ctx)
+    }
+
+    pub fn claim(
+        ctx: Context<Claim>,
+        task:u16,
+        msg: Vec<u8>,
+        sig: [u8; 64],
+    ) -> Result<()>{
+        instructions::claim::claim(ctx, task, msg, sig)
     }
 }

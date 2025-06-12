@@ -11,7 +11,7 @@ consensus_onchain = "B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

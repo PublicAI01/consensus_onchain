@@ -23,4 +23,15 @@ pub enum ErrorCode {
     InvalidQuizIDError,
     #[msg("Invalid owner.")]
     InvalidOwnerError,
+    #[msg("Invalid token account")]
+    InvalidTokenAccount,
+
+    #[msg("Invalid vault owner")]
+    InvalidVaultOwner,
+
+    #[msg("Only owner")]
+    OnlyOwner,
+
+    #[msg("Invalid nonce")]
+    NonceError,
 }

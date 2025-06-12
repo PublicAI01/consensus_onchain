@@ -2,18 +2,46 @@
 // single deploy script that's invoked from the CLI, injecting a provider
 // configured from the workspace's Anchor.toml.
 
-import {Keypair, PublicKey} from "@solana/web3.js";
+import {Keypair,
+  PublicKey,
+  sendAndConfirmTransaction,
+  Commitment,
+  Transaction} from "@solana/web3.js";
 import {BN} from "bn.js";
 import {assert} from "chai";
 import * as ed from "@noble/ed25519";
 import * as bs58 from  "bs58";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID
+} from "@solana/spl-token";
 const anchor = require("@coral-xyz/anchor");
+function hexStringToUint8Array(hexString: string): Uint8Array {
+  if (hexString.startsWith("0x")) {
+    hexString = hexString.slice(2);
+  }
 
+  if (hexString.length % 2 !== 0) {
+    throw new Error("Invalid hex string length");
+  }
+
+  const byteArray = new Uint8Array(hexString.length / 2);
+
+  for (let i = 0; i < hexString.length; i += 2) {
+    const hexPair = hexString.slice(i, i + 2);
+    byteArray[i / 2] = parseInt(hexPair, 16);
+  }
+
+  return byteArray;
+}
 module.exports = async function (provider) {
   // Configure client to use the provider.
   anchor.setProvider(provider);
+  const currentDirectory = process.cwd();
   const idl = JSON.parse(
-      require("fs").readFileSync("../target/idl/consensus_onchain.json", "utf8")
+      require("fs").readFileSync(currentDirectory + "/target/idl/consensus_onchain.json", "utf8")
   );
   const programID=new PublicKey("B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn")
 
@@ -27,7 +55,7 @@ module.exports = async function (provider) {
       program.programId
   )
   console.log(configPDA)
-  console.log(await program.account.config.fetch(configPDA))
+  // console.log(await program.account.config.fetch(configPDA))
   // const tx = await program.methods.update(provider.wallet.publicKey, new BN('30000')).accounts({
   //   config: configPDA,
   //   payer: provider.wallet.publicKey,
@@ -108,14 +136,58 @@ module.exports = async function (provider) {
 
 
  // console.log(provider.wallet.publicKey.toBase58())
-  let fee = new BN('30000')
-  const tx = await program.methods.initialize(provider.wallet.publicKey, fee).accounts({
-    config: configPDA,
-    payer: provider.wallet.publicKey,
-    systemProgram: anchor.web3.SystemProgram.programId,
-  }).signers([]).rpc();
-  console.log("Your transaction signature", tx);
+ //  let fee = new BN('30000')
+ //  const tx = await program.methods.initialize(provider.wallet.publicKey, fee).accounts({
+ //    config: configPDA,
+ //    payer: provider.wallet.publicKey,
+ //    systemProgram: anchor.web3.SystemProgram.programId,
+ //  }).signers([]).rpc();
+ //  console.log("Your transaction signature", tx);
+ //
+ //  assert((await program.account.config.fetch(configPDA)).signer.equals(provider.publicKey))
+ //  console.log(await program.account.config.fetch(configPDA))
+  let commitment: Commitment = 'confirmed';
+  // init clam
+  const seeds = [Buffer.from("state")];
+  const [statePda, _bump] = anchor.web3.PublicKey.findProgramAddressSync(
+      seeds,
+      program.programId);
+  const mint = new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB")
+  const token_vault_ata = await getAssociatedTokenAddress(
+      mint,
+      statePda,
+      true
+  );
+  console.log(token_vault_ata.toBase58());
+  // let createATAIx = createAssociatedTokenAccountInstruction(
+  //     provider.wallet.publicKey,
+  //     token_vault_ata,
+  //     statePda,
+  //     mint
+  // );
+  //
+  // let tx = new anchor.web3.Transaction().add(createATAIx);
+  // try {
+  //   await sendAndConfirmTransaction(provider.connection, tx, [provider.wallet.payer], {commitment});
+  // }
+  // catch (error: any) {
+  //   console.log(error);
+  // }
 
-  assert((await program.account.config.fetch(configPDA)).signer.equals(provider.publicKey))
-  console.log(await program.account.config.fetch(configPDA))
+  // let initClaimTx = program.methods.iniClaim(
+  // ).accounts({
+  //   state:statePda,
+  //   mint:mint,
+  //   tokenVault:token_vault_ata,
+  //   config: configPDA,
+  //   payer:provider.wallet.publicKey,
+  //   systemProgram: anchor.web3.SystemProgram.programId,
+  // }).instruction();
+  // let tx = new Transaction().add(await initClaimTx);
+  // try {
+  //   await sendAndConfirmTransaction(provider.connection, tx, [provider.wallet.payer], {commitment});
+  // }
+  // catch (error: any) {
+  //   console.log(error);
+  // }
 };
