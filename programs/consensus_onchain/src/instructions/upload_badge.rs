@@ -1,4 +1,6 @@
 use crate::errors::error::ErrorCode;
+use crate::states::badge::*;
+use crate::states::consensus::Config;
 use crate::utils;
 use anchor_lang::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -7,13 +9,11 @@ use solana_program::system_instruction;
 use solana_program::sysvar::instructions::{
     load_current_index_checked, load_instruction_at_checked, ID as IX_ID,
 };
-use crate::states::badge::*;
-use crate::states::consensus::Config;
 
 #[derive(Serialize, Deserialize)]
 struct BadgeInfo {
     /// Quiz id.
-    pub quiz:u64,
+    pub quiz: u64,
     /// Tier of badge.
     pub tier: u64,
     /// Owner of badge.
@@ -73,10 +73,7 @@ pub fn upload_badge(
     sig: [u8; 64],
 ) -> Result<()> {
     msg!("quiz:{}, msg:{:?}", quiz, msg);
-    require!(
-            quiz != 0,
-            ErrorCode::InvalidQuizIDError
-        );
+    require!(quiz != 0, ErrorCode::InvalidQuizIDError);
 
     let msg_str = String::from_utf8(msg.clone()).map_err(|_| ErrorCode::MessageShouldString)?;
 
@@ -84,10 +81,7 @@ pub fn upload_badge(
         serde_json::from_str(&msg_str).map_err(|_| ErrorCode::MessageShouldJson)?;
 
     let owner = *ctx.accounts.user.key;
-    require!(
-            owner == badge_info.owner,
-            ErrorCode::InvalidOwnerError
-        );
+    require!(owner == badge_info.owner, ErrorCode::InvalidOwnerError);
 
     let config_state = &ctx.accounts.config;
 
@@ -112,9 +106,9 @@ pub fn upload_badge(
 
     badge.tier = badge_info.tier;
 
-    let badge_config_pool= &mut ctx.accounts.badge_config_pool;
+    let badge_config_pool = &mut ctx.accounts.badge_config_pool;
 
-    let badge_config= &mut ctx.accounts.badge_config;
+    let badge_config = &mut ctx.accounts.badge_config;
     if badge_config.quiz == 0 {
         badge_config.quiz = quiz;
         badge_config_pool.config_count += 1;

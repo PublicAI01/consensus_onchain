@@ -3,12 +3,12 @@ mod errors;
 mod instructions;
 mod states;
 mod utils;
+use instructions::claim::*;
 use instructions::initialize::*;
 use instructions::update::*;
+use instructions::upload_badge::*;
 use instructions::upload_validation::*;
 use instructions::withdraw::*;
-use instructions::upload_badge::*;
-use instructions::claim::*;
 
 declare_id!("B2fHGq6iwRPGmn3KBUFBgQpxVnDGFQT3ZjD2vJTDphZn");
 
@@ -45,18 +45,24 @@ pub mod consensus_onchain {
         instructions::upload_badge::upload_badge(ctx, quiz, msg, sig)
     }
 
-    pub fn ini_claim(
-        ctx: Context<IniClaim>,
-    ) -> Result<()> {
+    pub fn ini_claim(ctx: Context<IniClaim>) -> Result<()> {
         instructions::claim::ini_claim(ctx)
     }
 
-    pub fn claim(
-        ctx: Context<Claim>,
-        task:u16,
+    pub fn claim(ctx: Context<Claim>, task: u16, msg: Vec<u8>, sig: [u8; 64]) -> Result<()> {
+        instructions::claim::claim(ctx, task, msg, sig)
+    }
+
+    pub fn ini_claim_public(ctx: Context<IniClaimPublic>) -> Result<()> {
+        instructions::claim::ini_claim_public(ctx)
+    }
+
+    pub fn claim_public(
+        ctx: Context<ClaimPublic>,
+        task: u16,
         msg: Vec<u8>,
         sig: [u8; 64],
-    ) -> Result<()>{
-        instructions::claim::claim(ctx, task, msg, sig)
+    ) -> Result<()> {
+        instructions::claim::claim_public(ctx, task, msg, sig)
     }
 }

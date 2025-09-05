@@ -28,7 +28,7 @@ pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         .to_account_info()
         .try_borrow_lamports()?;
     if amount != 0 {
-       balance = amount;
+        balance = amount;
     }
 
     // ctx.accounts.config.sub_lamports(balance)?;

@@ -152,7 +152,7 @@ module.exports = async function (provider) {
   const [statePda, _bump] = anchor.web3.PublicKey.findProgramAddressSync(
       seeds,
       program.programId);
-  const mint = new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB")
+  const mint = new PublicKey("AXCp86262ZPfpcV9bmtmtnzmJSL5sD99mCVJD4GR9vS")
   const token_vault_ata = await getAssociatedTokenAddress(
       mint,
       statePda,
@@ -190,4 +190,20 @@ module.exports = async function (provider) {
   // catch (error: any) {
   //   console.log(error);
   // }
+  let initClaimTx = program.methods.iniClaimPublic(
+  ).accounts({
+    state:statePda,
+    mint:mint,
+    tokenVault:token_vault_ata,
+    config: configPDA,
+    payer:provider.wallet.publicKey,
+    systemProgram: anchor.web3.SystemProgram.programId,
+  }).instruction();
+  let tx = new Transaction().add(await initClaimTx);
+  try {
+    await sendAndConfirmTransaction(provider.connection, tx, [provider.wallet.payer], {commitment});
+  }
+  catch (error: any) {
+    console.log(error);
+  }
 };

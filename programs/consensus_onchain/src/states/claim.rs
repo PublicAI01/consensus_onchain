@@ -3,10 +3,10 @@ use solana_program::pubkey::Pubkey;
 
 #[account]
 pub struct StateAccount {
-    /// The mint address of the token to be distributed
+    /// The mint address of the usdt token to be distributed
     pub token_mint: Pubkey,
 
-    /// The token vault that holds the tokens to be distributed
+    /// The token vault that holds the usdt tokens to be distributed
     pub token_vault: Pubkey,
 
     /// PDA bump seed
@@ -15,8 +15,11 @@ pub struct StateAccount {
     /// Total claimed.
     pub claimed: u64,
 
-    /// Reserved space for future upgrades
-    pub reserved: [u8; 64],
+    /// The mint address of the public token to be distributed
+    pub public_token_mint: Pubkey,
+
+    /// The token vault that holds the public tokens to be distributed
+    pub public_token_vault: Pubkey,
 }
 
 impl StateAccount {
@@ -24,7 +27,7 @@ impl StateAccount {
         32 + // token_vault
         1 +  // bump
         8 + // claimed
-        64;  // reserved
+        64; // reserved
 }
 
 // #[account]
